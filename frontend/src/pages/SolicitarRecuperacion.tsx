@@ -4,7 +4,7 @@ import axios from 'axios';
 import ThemeToggle from '../components/ThemeToggle';
 import FieldError from '../components/FieldError';
 import { esCorreoValido, claseInput } from '../utils/validaciones';
-import IconCanchas from '../assets/icon_canchas.svg';
+import IconCanchas from '../assets/icon_canchas.svg?react';
 
 
 const SolicitarRecuperacion = () => {

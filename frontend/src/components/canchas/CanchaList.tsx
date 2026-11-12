@@ -26,6 +26,7 @@ import type { Cancha, CanchaFormData, DisciplinaOption } from './cancha.types';
 // TIPOS Y CONSTANTES
 // =====================================================
 export type CanchaListModo = 'app' | 'preview';
+export type CanchaListTono = 'claro' | 'oscuro';
 
 const DISCIPLINAS: DisciplinaOption[] = [
   { id: 'todas', label: 'Todas', icon: '⚡' },
@@ -43,6 +44,8 @@ interface CanchaListProps {
   modo?: CanchaListModo;
   title?: string;
   subtitle?: string;
+  /** Superficie sobre la que se dibuja el catálogo (la landing usa 'oscuro'). */
+  tono?: CanchaListTono;
 }
 
 // =====================================================
@@ -52,11 +55,37 @@ export const CanchaList: React.FC<CanchaListProps> = ({
   modo = 'app',
   title = 'Nuestras Canchas y Escenarios Deportivos',
   subtitle = 'Instalaciones de alto rendimiento con iluminación LED, césped sintético y piso flotante reglamentario.',
+  tono = 'claro',
 }) => {
   const navigate = useNavigate();
   const { usuario, isAuthenticated } = useAuth();
 
   const isPreview = modo === 'preview';
+  const esOscuro = tono === 'oscuro';
+
+  // Estilos según la superficie que contiene el catálogo
+  const chipTono = esOscuro
+    ? 'border-white/10 bg-white/[0.06] text-arena-ivory/60'
+    : 'border-arena-ink/10 bg-arena-ink/[0.04] text-arena-ink2 dark:border-white/10 dark:bg-white/[0.04] dark:text-arena-ivory/45';
+  const tituloTono = esOscuro ? 'text-arena-ivory' : 'text-arena-ink dark:text-arena-ivory';
+  const subtituloTono = esOscuro ? 'text-arena-ivory/60' : 'text-arena-ink2 dark:text-arena-ivory/55';
+  const filtroInactivo = esOscuro
+    ? 'border-white/10 bg-white/[0.05] text-arena-ivory/60 hover:border-white/25 hover:text-arena-ivory'
+    : 'border-arena-ink/10 bg-arena-ivory text-arena-ink2 hover:border-arena-ink/25 hover:text-arena-ink dark:border-white/10 dark:bg-white/[0.04] dark:text-arena-ivory/50 dark:hover:border-white/25 dark:hover:text-arena-ivory';
+  const filtroActivo = 'bg-arena-night text-arena-accent-soft dark:bg-arena-accent dark:text-arena-ink';
+  const cajaBusqueda = esOscuro
+    ? 'border-white/10 bg-white/[0.06] focus-within:border-arena-accent/60 focus-within:ring-arena-accent/15'
+    : 'border-arena-ink/10 bg-arena-ivory focus-within:border-arena-ink/40 focus-within:ring-arena-ink/10 dark:border-white/10 dark:bg-white/[0.04] dark:focus-within:border-arena-accent/50 dark:focus-within:ring-arena-accent/15';
+  const iconoBusqueda = esOscuro ? 'text-arena-ivory/35' : 'text-arena-ink2/60 dark:text-arena-ivory/35';
+  const inputBusqueda = esOscuro
+    ? 'text-arena-ivory placeholder:text-arena-ivory/30'
+    : 'text-arena-ink placeholder:text-arena-ink2/50 dark:text-arena-ivory dark:placeholder:text-arena-ivory/25';
+  const botonLimpiar = esOscuro
+    ? 'text-arena-ivory/40 hover:bg-white/10 hover:text-arena-ivory'
+    : 'text-arena-ink2/60 hover:bg-arena-ink/5 hover:text-arena-ink dark:text-arena-ivory/40 dark:hover:bg-white/10 dark:hover:text-arena-ivory';
+  const cajaVacia = esOscuro
+    ? 'border-white/15 bg-white/[0.04]'
+    : 'border-arena-ink/15 bg-arena-ivory dark:border-white/10 dark:bg-white/[0.03]';
 
   // En preview NUNCA se comporta como admin (no se ven botones de CRUD)
   const isAdmin = !isPreview && Boolean(
@@ -229,10 +258,10 @@ export const CanchaList: React.FC<CanchaListProps> = ({
   const hayMas = isPreview && filteredCanchas.length > PREVIEW_LIMIT;
 
   const notificationClass = notification?.type === 'success'
-    ? 'border-emerald-500 bg-emerald-500/90 text-white'
+    ? 'border-emerald-500 bg-emerald-500/90 text-arena-ivory'
     : notification?.type === 'error'
-      ? 'border-red-500 bg-red-500/90 text-white'
-      : 'border-sky-500 bg-sky-500/90 text-white';
+      ? 'border-red-500 bg-red-500/90 text-arena-ivory'
+      : 'border-sky-500 bg-sky-500/90 text-arena-ivory';
 
   // =====================================================
   // RENDER
@@ -251,12 +280,14 @@ export const CanchaList: React.FC<CanchaListProps> = ({
       {/* Encabezado */}
       <div className="flex flex-wrap justify-between items-end gap-6 mb-8">
         <div>
-          <div className="inline-flex items-center gap-1.5 text-xs mb-3 px-3 py-1 rounded-full border border-claro-borde dark:border-oscuro-borde bg-claro-tarjeta dark:bg-oscuro-tarjeta text-claro-texto2 dark:text-oscuro-texto2">
-            <span className={`w-2 h-2 rounded-full ${isBackendOnline ? 'bg-emerald-500 shadow-[0_0_6px_theme(colors.emerald.500)]' : 'bg-amber-500'}`} />
-            {isBackendOnline ? 'Conectado a PostgreSQL (Backend API)' : 'Modo Demostración Frontend'}
+          <div className={`mb-3 inline-flex items-center gap-2 rounded-md border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] ${chipTono}`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${isBackendOnline ? 'bg-emerald-500' : 'bg-arena-sand'}`} />
+            {isBackendOnline ? 'PostgreSQL · en vivo' : 'Modo demostración'}
           </div>
-          <h2 className="text-3xl font-extrabold tracking-tight mb-1.5 text-claro-texto dark:text-oscuro-texto">{title}</h2>
-          <p className="text-base max-w-[620px] text-claro-texto2 dark:text-oscuro-texto2">{subtitle}</p>
+          <h2 className={`mb-2 text-3xl font-extrabold uppercase leading-[0.98] tracking-tight text-balance sm:text-4xl ${tituloTono}`}>
+            {title}
+          </h2>
+          <p className={`max-w-[620px] text-base ${subtituloTono}`}>{subtitle}</p>
         </div>
 
         <div>
@@ -265,16 +296,16 @@ export const CanchaList: React.FC<CanchaListProps> = ({
             <button
               type="button"
               onClick={handleOpenCreateModal}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold shadow-sm transition-colors bg-claro-primario hover:bg-claro-hover dark:bg-oscuro-primario dark:hover:bg-oscuro-hover text-white dark:text-oscuro-fondo"
+              className="press inline-flex items-center gap-2 rounded-xl bg-arena-accent px-5 py-2.5 text-[12px] font-extrabold uppercase tracking-[0.12em] text-arena-ink hover:bg-arena-accent-hover"
             >
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="18" height="18">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M12 4v16m8-8H4" />
               </svg>
               Nueva Cancha
             </button>
           ) : !isPreview ? (
-            <span className="text-xs px-3 py-1 rounded-full border border-claro-borde dark:border-oscuro-borde bg-claro-tarjeta dark:bg-oscuro-tarjeta text-claro-texto2 dark:text-oscuro-texto2">
-              {isAuthenticated ? `Sesión: ${usuario?.nombre} (${usuario?.rol})` : 'Modo Explorador / Reservas'}
+            <span className={`rounded-lg border px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] ${chipTono}`}>
+              {isAuthenticated ? `Sesión: ${usuario?.nombre} (${usuario?.rol})` : 'Modo explorador'}
             </span>
           ) : null}
         </div>
@@ -283,16 +314,16 @@ export const CanchaList: React.FC<CanchaListProps> = ({
       {/* Barra de Filtros y Búsqueda (solo modo app) */}
       {!isPreview && (
         <div className="flex flex-wrap items-center justify-between gap-4 mb-10">
-          <div className="flex gap-2 overflow-x-auto pb-2">
+          {/* En móvil la fila de disciplinas se desplaza: el degradado
+              lateral avisa que hay más chips a la derecha. */}
+          <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-2 [mask-image:linear-gradient(to_right,#000_calc(100%-28px),transparent)] [scrollbar-width:none] sm:[mask-image:none] [&::-webkit-scrollbar]:hidden">
             {DISCIPLINAS.map(d => (
               <button
                 key={d.id}
                 type="button"
                 onClick={() => setActiveDisciplina(d.id)}
-                className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-                  activeDisciplina === d.id
-                    ? 'bg-claro-primario dark:bg-oscuro-primario text-white dark:text-oscuro-fondo font-bold'
-                    : 'border border-claro-borde dark:border-oscuro-borde bg-claro-tarjeta dark:bg-oscuro-tarjeta text-claro-texto2 dark:text-oscuro-texto2 hover:text-claro-texto dark:hover:text-oscuro-texto'
+                className={`press inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border px-3.5 py-2 text-[12px] font-bold uppercase tracking-[0.08em] ${
+                  activeDisciplina === d.id ? filtroActivo : filtroInactivo
                 }`}
               >
                 <span>{d.icon}</span>
@@ -301,8 +332,8 @@ export const CanchaList: React.FC<CanchaListProps> = ({
             ))}
           </div>
 
-          <div className="flex items-center gap-2 min-w-[260px] px-3.5 py-2 rounded-xl border border-claro-borde dark:border-oscuro-borde bg-claro-tarjeta dark:bg-oscuro-tarjeta">
-            <svg className="w-[18px] h-[18px] text-claro-texto2/70 dark:text-oscuro-texto2/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className={`flex min-w-[260px] items-center gap-2 rounded-xl border px-3.5 py-2 transition-[border-color,box-shadow] duration-200 ease-out-soft focus-within:ring-2 ${cajaBusqueda}`}>
+            <svg className={`h-[18px] w-[18px] ${iconoBusqueda}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input
@@ -310,12 +341,14 @@ export const CanchaList: React.FC<CanchaListProps> = ({
               placeholder="Buscar por nombre o sector..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="bg-transparent border-none outline-none text-sm w-full text-claro-texto dark:text-oscuro-texto placeholder:text-claro-texto2/60 dark:placeholder:text-oscuro-texto2/60"
+              className={`w-full border-none bg-transparent text-sm outline-none focus:outline-none ${inputBusqueda}`}
             />
             {searchTerm && (
               <button
+                type="button"
                 onClick={() => setSearchTerm('')}
-                className="text-lg leading-none text-claro-texto2/70 dark:text-oscuro-texto2/70 hover:text-claro-texto dark:hover:text-oscuro-texto"
+                aria-label="Limpiar búsqueda"
+                className={`press flex h-6 w-6 items-center justify-center rounded-md text-lg leading-none ${botonLimpiar}`}
               >
                 ×
               </button>
@@ -326,20 +359,20 @@ export const CanchaList: React.FC<CanchaListProps> = ({
 
       {/* Grid de Canchas */}
       {isLoading ? (
-        <div className="text-center py-16 rounded-2xl border border-dashed border-claro-borde dark:border-oscuro-borde bg-claro-tarjeta dark:bg-oscuro-tarjeta">
-          <div className="w-10 h-10 mx-auto mb-4 rounded-full border-[3px] border-claro-primario/20 dark:border-oscuro-primario/20 border-t-claro-primario dark:border-t-oscuro-primario animate-spin" />
-          <p className="text-claro-texto2 dark:text-oscuro-texto2">Cargando canchas del complejo deportivo...</p>
+        <div className={`rounded-2xl border border-dashed py-16 text-center ${cajaVacia}`}>
+          <div className={`mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-[3px] ${esOscuro ? 'border-white/15 border-t-arena-accent-soft' : 'border-arena-ink/15 border-t-arena-ink dark:border-white/15 dark:border-t-arena-accent'}`} />
+          <p className={`text-sm font-medium uppercase tracking-[0.14em] ${subtituloTono}`}>Cargando canchas…</p>
         </div>
       ) : canchasAMostrar.length === 0 ? (
-        <div className="text-center py-16 rounded-2xl border border-dashed border-claro-borde dark:border-oscuro-borde bg-claro-tarjeta dark:bg-oscuro-tarjeta">
-          <div className="text-4xl mb-3">🏟️</div>
-          <h3 className="text-lg font-bold mb-1 text-claro-texto dark:text-oscuro-texto">No se encontraron canchas</h3>
-          <p className="text-claro-texto2 dark:text-oscuro-texto2">No hay canchas registradas para esta disciplina o término de búsqueda.</p>
+        <div className={`rounded-2xl border border-dashed py-16 text-center ${cajaVacia}`}>
+          <div className="mb-3 text-4xl">🏟️</div>
+          <h3 className={`mb-1 text-lg font-extrabold uppercase tracking-[0.04em] ${tituloTono}`}>No se encontraron canchas</h3>
+          <p className={subtituloTono}>No hay canchas registradas para esta disciplina o término de búsqueda.</p>
           {!isPreview && isAdmin && (
             <button
               type="button"
               onClick={handleOpenCreateModal}
-              className="mt-5 px-5 py-2.5 rounded-xl font-medium border transition-colors border-claro-borde dark:border-oscuro-borde text-claro-texto dark:text-oscuro-texto hover:bg-claro-tinte dark:hover:bg-oscuro-tinte"
+              className={`mt-5 rounded-xl border px-5 py-2.5 text-[12px] font-bold uppercase tracking-[0.12em] transition-colors ${esOscuro ? 'border-white/20 text-arena-ivory hover:bg-white/10' : 'border-arena-ink/15 text-arena-ink hover:bg-arena-ink/5 dark:border-white/15 dark:text-arena-ivory dark:hover:bg-white/10'}`}
             >
               Crear primera cancha
             </button>
@@ -366,18 +399,18 @@ export const CanchaList: React.FC<CanchaListProps> = ({
               {isAuthenticated ? (
                 <Link
                   to="/canchas"
-                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-bold shadow-md transition-all hover:-translate-y-0.5 bg-claro-primario hover:bg-claro-hover dark:bg-oscuro-primario dark:hover:bg-oscuro-hover text-white dark:text-oscuro-fondo"
+                  className="press inline-flex items-center gap-2.5 rounded-xl bg-arena-accent px-7 py-3.5 text-[13px] font-extrabold uppercase tracking-[0.14em] text-arena-ink hover:bg-arena-accent-hover motion-safe:hover:-translate-y-0.5"
                 >
                   {hayMas ? `Ver todas las canchas (${filteredCanchas.length})` : 'Ver todas y reservar'}
                   <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="18" height="18">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M13 7l5 5-5 5M6 12h12" />
                   </svg>
                 </Link>
               ) : (
                 <Link
                   to="/login"
                   state={{ from: '/canchas' }}
-                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-bold shadow-md transition-all hover:-translate-y-0.5 bg-claro-primario hover:bg-claro-hover dark:bg-oscuro-primario dark:hover:bg-oscuro-hover text-white dark:text-oscuro-fondo"
+                  className="press inline-flex items-center gap-2.5 rounded-xl bg-arena-accent px-7 py-3.5 text-[13px] font-extrabold uppercase tracking-[0.14em] text-arena-ink hover:bg-arena-accent-hover motion-safe:hover:-translate-y-0.5"
                 >
                   Iniciar sesión para reservar
                 </Link>

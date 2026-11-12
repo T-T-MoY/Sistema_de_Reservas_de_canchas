@@ -20,7 +20,6 @@ import { reporteApi } from './reporte.api';
 import { DonaMetricas } from './ReportesPagosGrafica';
 import { MapaOcupacionCanchas } from './ReportesHeatMap';
 import { ReportesRentabilidad } from './ReportesRentabilidad';
-import { ReporteComportamiento } from './ReportesComportamiento';
 import { ReporteUsuarios } from './ReporteUsuarios';
 import { ReporteCanchas } from './ReporteCanchas';
 import { ReporteEventosServicios } from './ReporteEventosServicios';

@@ -18,7 +18,7 @@ import {
     claseInput,
     calcularEdad
 } from '../../utils/validaciones';                          // ← +1 ../
-import type { Rol, Estado, Turno, NivelAcceso, UsuarioFormData } from './usuario.types';
+import type { Rol, UsuarioFormData } from './usuario.types';
 
 // =====================================================
 // TIPOS LOCALES (auxiliares del modal)

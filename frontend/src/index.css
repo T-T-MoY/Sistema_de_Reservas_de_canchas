@@ -3,6 +3,99 @@
 @tailwind utilities;
 
 /* =========================================================
+   MOTION TOKENS
+   Curvas fuertes (no las genéricas de CSS). Las easings
+   nativas son demasiado débiles y hacen que la UI se sienta
+   lenta aunque la duración sea corta.
+   ========================================================= */
+:root {
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@keyframes rise-in {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes soft-fade {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes marquee {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(-50%);
+    }
+}
+
+@layer utilities {
+    /* Entrada escalonada: aplicar junto con style={{ animationDelay }} */
+    .anim-rise {
+        animation: rise-in 560ms var(--ease-out) both;
+    }
+
+    .anim-fade {
+        animation: soft-fade 320ms var(--ease-out) both;
+    }
+
+    /* Feedback de presión: todo lo presionable responde */
+    .press {
+        transition:
+            transform 140ms var(--ease-out),
+            background-color 200ms ease,
+            border-color 200ms ease,
+            color 200ms ease,
+            box-shadow 240ms var(--ease-out),
+            opacity 200ms ease;
+    }
+
+    .press:active {
+        transform: scale(0.97);
+    }
+
+    /* Geometría de cancha: rejilla fina para fondos de estadio */
+    .pitch-lines {
+        background-image:
+            linear-gradient(to right, rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(255, 255, 255, 0.055) 1px, transparent 1px);
+        background-size: 72px 72px;
+    }
+
+    .pitch-lines-ink {
+        background-image:
+            linear-gradient(to right, rgba(10, 21, 25, 0.055) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(10, 21, 25, 0.055) 1px, transparent 1px);
+        background-size: 72px 72px;
+    }
+
+    /* Cinta de disciplinas: se duplica el contenido y se desplaza -50% */
+    .marquee-track {
+        animation: marquee 34s linear infinite;
+        will-change: transform;
+    }
+
+    .marquee-mask {
+        mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+        -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+    }
+}
+
+/* =========================================================
    BASE (antes vivía en styles/canchas-landing.css)
    Solo reglas estructurales, sin colores hardcodeados:
    los colores ahora vienen siempre de las clases
@@ -10,12 +103,91 @@
    ========================================================= */
 html {
     scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
 }
 
 body {
-    min-height: 100vh;
+    /* 100dvh evita el salto de la barra de URL en móvil */
+    min-height: 100dvh;
     line-height: 1.6;
     overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+/* En touch, el flash azul del tap delata que es una web */
+a,
+button,
+[role='button'],
+input,
+select,
+textarea {
+    -webkit-tap-highlight-color: transparent;
+}
+
+button,
+[role='button'] {
+    touch-action: manipulation;
+}
+
+/* Foco visible solo para teclado (no en cada click de mouse) */
+:focus-visible {
+    outline: 2px solid theme('colors.claro.primario');
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+
+.dark :focus-visible {
+    outline-color: theme('colors.oscuro.primario');
+}
+
+/* iOS hace zoom en el viewport si el input tiene menos de 16px */
+@media (max-width: 767px) {
+    input,
+    select,
+    textarea {
+        font-size: 16px;
+    }
+}
+
+/* =========================================================
+   ACCESIBILIDAD: MOVIMIENTO REDUCIDO
+   Menos movimiento, no cero: se conservan los cambios de
+   opacidad/color que ayudan a entender el estado.
+   ========================================================= */
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    /* El spinner de carga debe seguir girando */
+    .animate-spin {
+        animation-duration: 1s !important;
+        animation-iteration-count: infinite !important;
+    }
+
+    .anim-rise,
+    .anim-fade {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+
+    /* La cinta de disciplinas se queda quieta y legible */
+    .marquee-track {
+        animation: none !important;
+        transform: none !important;
+    }
 }
 
 /* =========================================================

@@ -20,7 +20,9 @@ export default function Home() {
       <Hero />
 
       {/* 2. Catálogo y Gestión de Canchas (CRUD con permisos admin) */}
-      <CanchaList />
+      <div className="bg-arena-deep dark:bg-arena-night">
+        <CanchaList tono="oscuro" />
+      </div>
 
       {/* 3. ¿Cómo funciona la reserva? */}
       <HowItWorks />

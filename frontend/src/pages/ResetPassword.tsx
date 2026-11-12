@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import ThemeToggle from '../components/ThemeToggle';
 import FieldError from '../components/FieldError';
-import IconCanchas from '../assets/icon_canchas.svg';
+import IconCanchas from '../assets/icon_canchas.svg?react';
 import {
     esContraseñaSegura,
     fuerzaContraseña,

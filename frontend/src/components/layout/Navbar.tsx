@@ -1,6 +1,6 @@
 import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import IconCanchas from '../../assets/icon_canchas.svg';
+import IconCanchas from '../../assets/icon_canchas.svg?react';
 
 // =====================================================
 // TIPOS

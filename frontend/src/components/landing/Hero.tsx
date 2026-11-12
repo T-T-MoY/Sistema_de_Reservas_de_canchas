@@ -1,244 +1,208 @@
 /**
  * ============================================================================
  * ARCHIVO: Hero.tsx
- * COMPONENTE: Sección Principal de Bienvenida del Complejo Deportivo
- * Con animación de partículas interactiva estilo web moderna (mans.im)
- * Estilos migrados a Tailwind (tokens claro-x & oscuro-x de tailwind.config.js)
+ * COMPONENTE: Portada de la landing
+ * Lenguaje visual: "noche de estadio" (PES) — fondo profundo, líneas de
+ * cancha, acento lima y marcador tipo transmisión.
+ *
+ * Sin canvas ni requestAnimationFrame: la portada es 100% CSS, así que no
+ * cuesta frames ni batería y respeta prefers-reduced-motion de forma natural.
  * ============================================================================
  */
 
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
+
+const MARCADOR = [
+  { valor: '06', etiqueta: 'Canchas' },
+  { valor: '07', etiqueta: 'Disciplinas' },
+  { valor: '100%', etiqueta: 'En línea' },
+  { valor: '4.9', etiqueta: 'Rating' },
+];
+
+const DISCIPLINAS = [
+  'Fútbol 11',
+  'Futsal',
+  'Pádel',
+  'Tenis',
+  'Básquet',
+  'Vóley',
+  'Atletismo',
+];
 
 export const Hero: React.FC = () => {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    let animationFrameId: number;
-    const section = canvas.parentElement;
-
-    let width = (canvas.width = section?.offsetWidth || window.innerWidth);
-    let height = (canvas.height = section?.offsetHeight || 620);
-
-    const handleResize = () => {
-      if (!canvas || !section) return;
-      width = canvas.width = section.offsetWidth;
-      height = canvas.height = section.offsetHeight;
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    const mouse = { x: -1000, y: -1000, radius: 140 };
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      mouse.x = e.clientX - rect.left;
-      mouse.y = e.clientY - rect.top;
-    };
-
-    const handleMouseLeave = () => {
-      mouse.x = -1000;
-      mouse.y = -1000;
-    };
-
-    section?.addEventListener('mousemove', handleMouseMove);
-    section?.addEventListener('mouseleave', handleMouseLeave);
-
-    // Paleta de partículas deportivas luminosas (coincide con claro/oscuro primario)
-    const colors = ['#5DA797', '#1C3034', '#38bdf8', '#F1EADA', '#06b6d4'];
-    const count = Math.min(Math.floor((width * height) / 16000), 50);
-
-    class Particle {
-      x: number;
-      y: number;
-      vx: number;
-      vy: number;
-      size: number;
-      color: string;
-      alpha: number;
-
-      constructor() {
-        this.x = Math.random() * width;
-        this.y = Math.random() * height;
-        this.vx = (Math.random() - 0.5) * 0.65;
-        this.vy = (Math.random() - 0.5) * 0.65;
-        this.size = Math.random() * 2 + 1;
-        this.color = colors[Math.floor(Math.random() * colors.length)];
-        this.alpha = Math.random() * 0.5 + 0.35;
-      }
-
-      update() {
-        this.x += this.vx;
-        this.y += this.vy;
-
-        if (this.x < 0) this.x = width;
-        if (this.x > width) this.x = 0;
-        if (this.y < 0) this.y = height;
-        if (this.y > height) this.y = 0;
-
-        const dx = mouse.x - this.x;
-        const dy = mouse.y - this.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < mouse.radius) {
-          const force = (1 - dist / mouse.radius) * 1.6;
-          this.x -= (dx / dist) * force;
-          this.y -= (dy / dist) * force;
-        }
-      }
-
-      draw() {
-        if (!ctx) return;
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fillStyle = this.color;
-        ctx.shadowBlur = 8;
-        ctx.shadowColor = this.color;
-        ctx.globalAlpha = this.alpha;
-        ctx.fill();
-        ctx.restore();
-      }
-    }
-
-    const particles: Particle[] = Array.from({ length: count }, () => new Particle());
-
-    const animate = () => {
-      ctx.clearRect(0, 0, width, height);
-
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-
-          if (dist < 115) {
-            const alpha = (1 - dist / 115) * 0.18;
-            ctx.beginPath();
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.strokeStyle = `rgba(93, 167, 151, ${alpha})`;
-            ctx.lineWidth = 0.75;
-            ctx.stroke();
-          }
-        }
-
-        const dx = mouse.x - particles[i].x;
-        const dy = mouse.y - particles[i].y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < mouse.radius) {
-          const alpha = (1 - dist / mouse.radius) * 0.35;
-          ctx.beginPath();
-          ctx.moveTo(particles[i].x, particles[i].y);
-          ctx.lineTo(mouse.x, mouse.y);
-          ctx.strokeStyle = `rgba(56, 189, 248, ${alpha})`;
-          ctx.lineWidth = 1;
-          ctx.stroke();
-        }
-
-        particles[i].update();
-        particles[i].draw();
-      }
-
-      animationFrameId = requestAnimationFrame(animate);
-    };
-
-    animate();
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-      window.removeEventListener('resize', handleResize);
-      section?.removeEventListener('mousemove', handleMouseMove);
-      section?.removeEventListener('mouseleave', handleMouseLeave);
-    };
-  }, []);
-
   return (
-    <section className="relative overflow-hidden px-6 pt-22 pb-18 bg-claro-fondo dark:bg-oscuro-fondo border-b border-claro-borde dark:border-oscuro-borde">
-      {/* 1. Orbes de luz con movimiento suave */}
+    <section className="relative isolate overflow-hidden bg-arena-base text-arena-ivory dark:bg-arena-night dark:text-arena-ivory">
+      {/* 1. Líneas de cancha */}
+      <div aria-hidden="true" className="pitch-lines pointer-events-none absolute inset-0 opacity-70" />
+
+      {/* 2. Reflectores */}
       <div
         aria-hidden="true"
-        className="absolute -top-[15%] left-[20%] w-[500px] h-[500px] rounded-full pointer-events-none z-[1] blur-[75px] animate-float-orb-1 bg-[radial-gradient(circle,rgba(93,167,151,0.20)_0%,rgba(28,48,52,0.25)_50%,transparent_70%)]"
+        className="pointer-events-none absolute -top-52 left-[8%] h-[560px] w-[560px] rounded-full bg-arena-accent/[0.13] blur-[130px]"
       />
       <div
         aria-hidden="true"
-        className="absolute top-[10%] right-[10%] w-[550px] h-[550px] rounded-full pointer-events-none z-[1] blur-[85px] animate-float-orb-2 bg-[radial-gradient(circle,rgba(38,18,17,0.30)_0%,rgba(28,48,52,0.20)_50%,transparent_70%)]"
+        className="pointer-events-none absolute -bottom-40 right-[-6%] h-[520px] w-[520px] rounded-full bg-arena-accent/[0.12] blur-[140px]"
       />
-
-      {/* 2. Patrón de rejilla geométrica */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 pointer-events-none z-[1] opacity-60 dark:opacity-100 [background-size:32px_32px] bg-[radial-gradient(rgba(28,48,52,0.10)_1px,transparent_1px)] dark:bg-[radial-gradient(rgba(241,234,218,0.08)_1px,transparent_1px)]"
+        className="pointer-events-none absolute left-1/2 top-1/3 h-[320px] w-[720px] -translate-x-1/2 rounded-full bg-arena-accent/[0.06] blur-[120px]"
       />
 
-      {/* 3. Canvas de partículas y constelación interactiva */}
-      <canvas ref={canvasRef} aria-hidden="true" className="absolute inset-0 w-full h-full pointer-events-none z-[2]" />
+      {/* 3. Trama diagonal (marca de agua de transmisión) */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute right-0 top-0 h-full w-[46%] opacity-[0.06] [background:repeating-linear-gradient(118deg,#fff_0_1px,transparent_1px_26px)]"
+      />
 
-      {/* 4. Contenido Principal */}
-      <div className="relative z-[5] max-w-[960px] mx-auto text-center flex flex-col items-center">
-        {/* Badge superior */}
-        <div className="inline-flex items-center gap-2 mb-6 px-4 py-1.5 rounded-full text-sm backdrop-blur-sm border border-claro-borde dark:border-oscuro-borde bg-claro-tarjeta/70 dark:bg-oscuro-tinte/50 text-claro-texto dark:text-oscuro-texto">
-          <span className="w-2 h-2 rounded-full bg-claro-primario dark:bg-oscuro-primario animate-pulse-dot" />
-          <span>Instalaciones abiertas hoy • Horario 06:00 a 23:30</span>
-        </div>
+      <div className="relative z-10 mx-auto grid max-w-[1240px] items-center gap-12 px-6 pb-16 pt-14 sm:pt-16 lg:grid-cols-[1.08fr_0.92fr] lg:gap-16 lg:pb-20 lg:pt-20">
 
-        {/* Título Principal con Gradiente */}
-        <h1 className="text-4xl md:text-5xl font-extrabold leading-tight tracking-tight mb-5 text-claro-texto dark:text-oscuro-texto">
-          Tu espacio ideal para <br />
-          <span className="bg-gradient-to-br from-claro-primario to-sky-500 dark:from-oscuro-primario dark:to-sky-400 bg-clip-text text-transparent">
-            jugar, entrenar y competir
+        {/* =====================================================
+            COLUMNA IZQUIERDA: mensaje
+            ===================================================== */}
+        <div>
+          <span className="anim-rise inline-flex items-center gap-2.5 rounded-full border border-white/12 bg-white/[0.04] px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-arena-ivory/70 backdrop-blur-sm">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-arena-accent opacity-75 motion-safe:animate-ping" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-arena-accent" />
+            </span>
+            Temporada 2026 · Turnos 06:00–23:30
           </span>
-        </h1>
 
-        {/* Descripción */}
-        <p className="text-lg max-w-[720px] mb-9 text-claro-texto2 dark:text-oscuro-texto2">
-          El complejo deportivo más completo de la ciudad. Reserva canchas de fútbol, básquetbol,
-          voleibol, tenis y pádel con disponibilidad en tiempo real y confirmación instantánea.
-        </p>
+          <h1 className="anim-rise mt-6 text-[2.65rem] font-extrabold uppercase leading-[0.92] tracking-[-0.02em] text-arena-ivory text-balance sm:text-6xl lg:text-[4.15rem] [animation-delay:70ms]">
+            Tu cancha.
+            <br />
+            Tu horario.
+            <br />
+            <span className="text-arena-accent-soft">Tu juego.</span>
+          </h1>
 
-        {/* Grupo de Botones de Acción */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-14 w-full sm:w-auto">
-          <a
-            href="#canchas"
-            className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl font-bold text-base shadow-md transition-all hover:-translate-y-0.5 bg-claro-primario hover:bg-claro-hover dark:bg-oscuro-primario dark:hover:bg-oscuro-hover text-white dark:text-oscuro-fondo"
-          >
-            Explorar Canchas
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" width="18" height="18">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </a>
-          <a
-            href="#como-funciona"
-            className="inline-flex items-center justify-center px-7 py-3.5 rounded-xl font-semibold text-base border transition-all border-claro-borde dark:border-oscuro-borde bg-claro-tarjeta dark:bg-oscuro-tarjeta hover:bg-claro-tinte dark:hover:bg-oscuro-tinte text-claro-texto dark:text-oscuro-texto"
-          >
-            ¿Cómo reservar?
-          </a>
+          <p className="anim-rise mt-6 max-w-[540px] text-base leading-relaxed text-arena-ivory/65 sm:text-lg [animation-delay:140ms]">
+            Reservá en segundos, llegá y jugá. Disponibilidad real, confirmación
+            inmediata y pago con QR en el complejo deportivo más completo de la ciudad.
+          </p>
+
+          <div className="anim-rise mt-9 flex flex-col gap-3 sm:flex-row sm:items-center [animation-delay:210ms]">
+            <a
+              href="#canchas"
+              className="press inline-flex items-center justify-center gap-2.5 rounded-xl bg-arena-accent px-7 py-4 text-[13px] font-extrabold uppercase tracking-[0.14em] text-arena-ink hover:bg-arena-accent-hover motion-safe:hover:-translate-y-0.5"
+            >
+              Reservar ahora
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M13 7l5 5-5 5M6 12h12" />
+              </svg>
+            </a>
+            <a
+              href="#como-funciona"
+              className="press inline-flex items-center justify-center rounded-xl border border-white/15 px-7 py-4 text-[13px] font-bold uppercase tracking-[0.14em] text-arena-ivory/85 hover:border-white/30 hover:bg-white/5 hover:text-arena-ivory"
+            >
+              Cómo funciona
+            </a>
+          </div>
+
+          <div className="anim-rise mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-arena-ivory/40 [animation-delay:280ms]">
+            <span className="flex items-center gap-1.5">
+              <svg className="h-3.5 w-3.5 text-arena-accent-soft" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+              Cancelación 24 h
+            </span>
+            <span className="flex items-center gap-1.5">
+              <svg className="h-3.5 w-3.5 text-arena-accent-soft" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+              Pago QR / tarjeta
+            </span>
+            <span className="flex items-center gap-1.5">
+              <svg className="h-3.5 w-3.5 text-arena-accent-soft" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+              Confirmación al instante
+            </span>
+          </div>
         </div>
 
-        {/* Barra de Estadísticas Rápidas */}
-        <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-0 w-full max-w-[860px] rounded-2xl px-6 py-5 backdrop-blur-sm border border-claro-borde dark:border-oscuro-borde bg-claro-tarjeta/80 dark:bg-oscuro-tinte/40">
-          {[
-            { n: '6+', t: 'Canchas Profesionales' },
-            { n: '7', t: 'Disciplinas Deportivas' },
-            { n: '100%', t: 'Gestión en Línea' },
-            { n: '4.9 ★', t: 'Calificación Usuarios' },
-          ].map((stat, i) => (
-            <React.Fragment key={stat.t}>
-              {i > 0 && (
-                <div className="hidden md:block w-px h-9 mx-6 bg-claro-borde dark:bg-oscuro-borde" />
-              )}
-              <div className="flex-1 text-center">
-                <span className="block text-2xl font-extrabold text-claro-texto dark:text-oscuro-texto">{stat.n}</span>
-                <span className="text-sm text-claro-texto2 dark:text-oscuro-texto2">{stat.t}</span>
+        {/* =====================================================
+            COLUMNA DERECHA: marcador
+            ===================================================== */}
+        <div className="anim-rise relative [animation-delay:180ms]">
+          {/* Halo detrás del panel */}
+          <div
+            aria-hidden="true"
+            className="absolute -inset-6 rounded-[2rem] bg-gradient-to-br from-arena-accent/15 via-transparent to-arena-accent/10 blur-2xl"
+          />
+
+          <div className="relative overflow-hidden rounded-2xl border border-white/12 bg-white/[0.035] backdrop-blur-md">
+            {/* Barra superior del marcador */}
+            <div className="flex items-center justify-between border-b border-white/10 px-5 py-3.5">
+              <span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.22em] text-arena-ivory/55">
+                <span className="h-1.5 w-1.5 rounded-full bg-arena-accent motion-safe:animate-pulse-dot" />
+                Hoy en el complejo
+              </span>
+              <span className="font-mono text-[11px] font-semibold tracking-wider text-arena-accent-soft">
+                06:00 — 23:30
+              </span>
+            </div>
+
+            {/* Cifras */}
+            <div className="grid grid-cols-2">
+              {MARCADOR.map((item, i) => (
+                <div
+                  key={item.etiqueta}
+                  className={`px-5 py-6 ${i % 2 === 1 ? 'border-l border-white/10' : ''} ${i > 1 ? 'border-t border-white/10' : ''}`}
+                >
+                  <p className="text-3xl font-black leading-none tracking-tight text-arena-ivory tabular-nums sm:text-4xl">
+                    {item.valor}
+                    <span className="ml-0.5 text-arena-accent-soft">.</span>
+                  </p>
+                  <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.2em] text-arena-ivory/45">
+                    {item.etiqueta}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Pie del panel */}
+            <div className="flex items-center justify-between border-t border-white/10 bg-arena-deep/60 px-5 py-3 dark:bg-arena-panel/60">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-arena-ivory/40">
+                Sede La Paz
+              </span>
+              <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.18em] text-arena-sand">
+                4.9
+                <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M10 1.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L10 14.9l-5.2 2.7 1-5.8L1.5 7.7l5.9-.9L10 1.5z" />
+                </svg>
+                <span className="text-arena-ivory/35">/ 5</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* =====================================================
+          CINTA DE DISCIPLINAS
+          ===================================================== */}
+      <div className="relative z-10 border-y border-white/10 bg-arena-deep/70 py-3.5 dark:bg-arena-panel/70">
+        <div className="marquee-mask overflow-hidden">
+          <div className="marquee-track flex w-max items-center">
+            {[0, 1].map((copia) => (
+              <div key={copia} aria-hidden={copia === 1} className="flex items-center gap-8 pr-8">
+                {DISCIPLINAS.map((disciplina) => (
+                  <span
+                    key={`${copia}-${disciplina}`}
+                    className="flex items-center gap-8 whitespace-nowrap text-[11px] font-bold uppercase tracking-[0.3em] text-arena-ivory/40"
+                  >
+                    {disciplina}
+                    <span className="h-1 w-1 rounded-full bg-arena-accent/60" />
+                  </span>
+                ))}
               </div>
-            </React.Fragment>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </section>
   );
 };
+
 export default Hero;

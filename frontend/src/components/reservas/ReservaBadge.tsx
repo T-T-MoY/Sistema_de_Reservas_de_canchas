@@ -6,8 +6,6 @@
  * ============================================================================
  */
 
-import type { EstadoReserva } from './reserva.types';
-
 interface Props {
   estado: string;
 }
